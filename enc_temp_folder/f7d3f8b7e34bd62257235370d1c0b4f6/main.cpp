@@ -157,7 +157,7 @@ public:
 	}
 	
 };
-ForwardList operator+( ForwardList left,  ForwardList right)
+ForwardList operator+( ForwardList& left,  ForwardList& right)
 {
 	Element* Temp = left.get_Head();
 	while (Temp->get_pNext())	Temp = Temp->get_pNext();
