@@ -26,6 +26,7 @@ public:
 		//delete[]this->pNext;
 	}
 	friend class ForwardList;
+	friend ForwardList operator+(const ForwardList& left, const ForwardList& right);
 };
 
 unsigned int Element::count = 0; //Статическую переменную можно проиницилизировать
@@ -45,41 +46,77 @@ public:
 		//Если голова указывает на 0,то и список пуст
 		cout << "LConstructor:\t" << this << endl;
 	}
+	ForwardList(const ForwardList& other):ForwardList()
+	{
+		/*for (Element* Temp = other.Head; Temp; Temp = Temp->pNext)
+			push_back(Temp->Data);*/
+		*this = other;
+		cout << "CopyConstructor:\t" << this << endl;
+	}
+
 	~ForwardList()
 
 	{
 		cout << "LDestructor:\t" << this << endl;
-		for (int i = 0; i < size; i++)
+		while (Head)pop_front();
+		/*for (int i = 0; i < size; i++)
 		{
 		    this->pop_front();
 			size++;
-		}
+		}*/
 		//	this->Head->~Element();
 		
+	}
+
+	//               Operators
+	ForwardList& operator=(const ForwardList& other)
+	{
+		if (this == &other)return *this;
+		while (Head)pop_front();
+		for (Element* Temp = other.Head; Temp; Temp = Temp->pNext)
+			push_back(Temp->Data);
+		cout << "CopyAssighment:\t" << this << endl;
+		return *this;
+	}
+	ForwardList(const ForwardList&& other) : ForwardList()
+	{
+		*this = std::move(other);
+		cout << "MoveConst:\t" << this << endl;
+	}
+	ForwardList& operator=(ForwardList&& other)
+	{
+		if (this == &other)return *this;
+		while (Head)pop_front();
+		this->Head = other.Head;
+		this->size = other.size;
+		other.Head = nullptr;
+		other.size = 0;
+		cout << "MoveAssig:\t" << this << endl;
+		return *this;
 	}
 		//                  Adding Elements:
 	void push_front(int Data)
 	{
 		//1)Создаем новый элумент
-		Element* New = new Element(Data);
-		//2)Пристыковываем новый элемент к началу списка
-		New->pNext = Head;
-		//3)Переводим голову на новый элемент
-		Head = New;
+		Head = new Element(Data,Head);
+		////2)Пристыковываем новый элемент к началу списка
+		//New->pNext = Head;
+		////3)Переводим голову на новый элемент
+		//Head = New;
 		size++;
 	}
 	void push_back(int Data)
 	{
 		if(Head ==nullptr)return push_front(Data);
 		//1) создаем новый элемент:
-		Element* New = new Element(Data);
+		//Element* New = new Element(Data);
 		//2) Доходим до последнего элемента списка:
 		Element* Temp = Head;
 		while (Temp->pNext)	Temp = Temp->pNext;
 		// Теперь Итератор указывает на последний элемент списка,
 		// и к нему можно пристыковывать новый элемент.
 		//3)
-		Temp->pNext = New ;
+		Temp->pNext = new Element(Data);
 		size++;
 	}
 	void insert(int Index, int Data)
@@ -91,13 +128,12 @@ public:
 			return;
 		}
 		//1)Создаем новый элемент
-		Element* New = new Element(Data);
+		//Element* New = new Element(Data);
 		//2) Доходим до нужного элемента в список
 		Element* Temp = Head;
 		for (int i = 0; i < Index - 1;i++)Temp = Temp->pNext;
 		//3)Включаем новый элемент в список
-		New->pNext = Temp->pNext;
-		Temp->pNext = New; 
+		Temp->pNext =new Element(Data,Temp->pNext);
 		size++;
 	}
 
@@ -144,30 +180,34 @@ public:
 		   //   Methods
 	void print()const
 	{
-		Element* Temp = Head;  //Temp- это итератор.
+		//Element* Temp = Head;  //Temp- это итератор.
 		// Итератор-это указатель,при помощи которого можно получить доступ к элементам структуры данных
+		//while (Temp)
+		//{
+		//	Temp = Temp->pNext;// Переход на следующий элемент
+		//}
 		cout << "Head:\t" << Head << endl;
-		while (Temp)
-		{
+		for(Element* Temp=Head;Temp;Temp=Temp->pNext)
 			cout << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
-			Temp = Temp->pNext;// Переход на следующий элемент
-		}
 		cout << "Колличество элементов списка:\t   " << size << endl;
 		cout << "Общее колличество элементов списка:" << Element:: count << endl;
 	}
 	
+	friend ForwardList operator+(const ForwardList& left, const ForwardList& right);
 };
-ForwardList operator+( ForwardList left,  ForwardList right)
+ForwardList operator+(const ForwardList& left, const ForwardList& right)
 {
-	Element* Temp = left.get_Head();
-	while (Temp->get_pNext())	Temp = Temp->get_pNext();
-	Temp->set_pNext(right.get_Head());
-	return left;
+	ForwardList cat = left;
+	for (Element* Temp = right.Head; Temp; Temp = Temp->pNext)
+		cat.push_back(Temp->Data);
+	return cat;
 }
 
-
 //#define BASE_CHECK
-#define COUNT_CHECK
+//#define COUNT_CHECK
+//#define RANGE_BASE_FOR_ARRAY
+#define RANGE_BASE_FOR_LIST
+
 void main()
 {
 	setlocale(LC_ALL, "");
@@ -214,8 +254,27 @@ void main()
 	list1.print();
 	list2.print();
 
-	ForwardList list3 = list1 + list2;
+	ForwardList list3;
+	list3 = list1 + list2;
 	list3.print();
 
 #endif // COUNT_CHECK
+
+#ifdef RANGE_BASE_FOR_ARRAY
+	int arr[] = { 3,5,8,13,21 };
+	for (int i = 0; i < sizeof(arr) / sizeof(arr[0]); i++)
+		cout << arr[i] << "\t";
+	cout << endl;
+	for (int i : arr) cout << i << "\t";
+#endif // RANGE_BASE_FOR_ARRAY
+#ifdef RANGE_BASE_FOR_LIST
+	ForwardList list = { 3,5,8,13,21 };
+	for (int i : list)
+	{
+		cout << i << "\t";
+	}
+	cout << endl
+#endif // RANGE_BASE_FOR_LIST
+		;
+
 }
