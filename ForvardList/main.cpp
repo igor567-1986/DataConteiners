@@ -12,8 +12,6 @@ class Element
 	Element* pNext;     // Адрес слудующего элемента
 	static unsigned int count; //Количество элементов
 public:
-	Element* get_pNext()const { return pNext; }
-	void set_pNext(Element* pNext) { this->pNext = pNext; }
 	Element(int Data, Element* pNext = nullptr) :Data(Data), pNext(pNext)
 	{
 		count++;
@@ -38,8 +36,6 @@ class ForwardList
 	// Голова является точкой входа в список
 	unsigned int size;
 public:
-	Element* get_Head()const { return Head; }
-	void set_Head(Element* Head) { this->Head = Head; }
 	ForwardList() :Head(nullptr),size(0)
 	{
 		//Конструктор по умолчанию создает пустой список.
@@ -192,6 +188,19 @@ public:
 		cout << "Колличество элементов списка:\t   " << size << endl;
 		cout << "Общее колличество элементов списка:" << Element:: count << endl;
 	}
+	void revers()
+	{
+		int n = size - 1;
+		int buffer=0;
+		Element* Temp;
+		for (int i = 0; i < n; i++)
+		{
+			Temp = Head;
+			while (Temp->pNext)	Temp = Temp->pNext;
+			insert(i,Temp->Data);
+			pop_back();
+		}
+	}
 	
 	friend ForwardList operator+(const ForwardList& left, const ForwardList& right);
 };
@@ -204,9 +213,9 @@ ForwardList operator+(const ForwardList& left, const ForwardList& right)
 }
 
 //#define BASE_CHECK
-//#define COUNT_CHECK
+#define COUNT_CHECK
 //#define RANGE_BASE_FOR_ARRAY
-#define RANGE_BASE_FOR_LIST
+//#define RANGE_BASE_FOR_LIST
 
 void main()
 {
@@ -256,6 +265,8 @@ void main()
 
 	ForwardList list3;
 	list3 = list1 + list2;
+	list3.print();
+	list3.revers();
 	list3.print();
 
 #endif // COUNT_CHECK
