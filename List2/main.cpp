@@ -1,4 +1,4 @@
-//#include<iostream>
+ï»¿//#include<iostream>
 //using namespace std;
 //
 //#define tab "\t"
@@ -84,15 +84,15 @@
 //	cout << "Tail:\t" << Tail << endl;
 //	for (Element* Temp = Tail; Temp; Temp = Temp->pPrev)
 //		cout << Temp << tab << Temp->Data << tab << Temp->pPrev << endl;
-//	cout << "Êîëëè÷åñòâî ýëåìåíòîâ ñïèñêà:\t   " << size << endl;
-//	cout << "Îáùåå êîëëè÷åñòâî ýëåìåíòîâ ñïèñêà:" << Element::count << endl;
+//	cout << "ÐšÐ¾Ð»Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² ÑÐ¿Ð¸ÑÐºÐ°:\t   " << size << endl;
+//	cout << "ÐžÐ±Ñ‰ÐµÐµ ÐºÐ¾Ð»Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² ÑÐ¿Ð¸ÑÐºÐ°:" << Element::count << endl;
 //    }    
 //};
 //void main()
 //{
 //	setlocale(LC_ALL, "");
 //	int n;
-//	cout << "Ââåäèòå ðàçìåð ñïèñêà:"; cin >> n;
+//	cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ñ€Ð°Ð·Ð¼ÐµÑ€ ÑÐ¿Ð¸ÑÐºÐ°:"; cin >> n;
 //	DolbyLinkedList list;
 //	for (int i=0; i < n; i++)
 //	{
@@ -109,8 +109,12 @@ using std::endl;
 #define tab "\t"
 #define delimiter "\n----------------------------------\n"
 
+
+
+
 class List
 {
+	
 	class Element
 	{
 		int Data;
@@ -126,8 +130,47 @@ class List
 		{
 			cout << "EDestructor:\t" << this << endl;
 		}
+		friend List operator+(const List& left, const List& right);
 		friend class List;
+		friend class Iterator;
 	}*Head, * Tail;
+	class Iterator
+	{
+		Element* Temp;
+	public:
+		Iterator(Element* Temp) :Temp(Temp)
+		{
+			cout << "ItConstructor:\t" << this << endl;
+		}
+		~Iterator()
+		{
+			cout << "ItDestructor:\t" << this << endl;
+		}
+
+		Iterator& operator++()
+		{
+			Temp = Temp->pNext;
+			return *this;
+		}
+
+		bool operator==(const Iterator& other)const
+		{
+			return this->Temp == other.Temp;
+		}
+		bool operator!=(const Iterator& other)const
+		{
+			return this->Temp != other.Temp;
+		}
+
+		const int& operator*()const
+		{
+			return Temp->Data;
+		}
+		int& operator*()
+		{
+			return Temp->Data;
+		}
+	};
 	unsigned int size;
 public:
 	List()
@@ -138,14 +181,46 @@ public:
 	}
 	List(const std::initializer_list<int>& il) :List()
 	{
-		for (int const* it = il.begin(); it != il.end(); it++)push_back(it);
+		for (int const* it = il.begin(); it != il.end(); it++)push_back(*it);
 	}
-	List(const List)
+	List(const List& other) :List()
+	{
+			*this = other;
+			cout << "CopyConstructor:" << this << endl;
+	}
+	List(List&& other) :List()
+	{
+		*this = std::move(other);
+		cout << "MoveConstructor:\t" << this << endl;
+	}
 	~List()
 	{
 		//while (Head)pop_front();
 		while (Tail)pop_back();
 		cout << "LDestructor:\t" << this << endl;
+	}
+
+	//				Operators:
+	List& operator=(const List& other)
+	{
+		if (this == &other)return *this;
+		while (Head)pop_front();
+		for (Element* Temp = other.Head; Temp; Temp = Temp->pNext)
+			push_back(Temp->Data);
+		cout << "CopyAssignment:\t" << this << endl;
+		return *this;
+	}
+	List& operator=(List&& other)
+	{
+		if (this == &other) return *this;
+		while (Head)pop_front();
+		//Shallow copy:
+		this->Head = other.Head;
+		this->size = other.size;
+		other.Head = nullptr;
+		other.size = 0;
+		cout << "MoveAssignment:\t" << this << endl;
+		return *this;
 	}
 
 	//				Adding Elements:
@@ -224,33 +299,82 @@ public:
 		Tail->pNext = nullptr;
 		size--;
 	}
+	void erase(int Index)
+	{
+		if (Index > size)
+		{
+			cout << "Eror: Out of range" << endl;
+			return;
+		}
+		if (Index == 0)return pop_front();
+		if (Index == size)return pop_back();
+		Element* Temp;
+		if (Index < size / 2)
+		{
+			Temp = Head;
+			for (int i = 0; i < Index; i++)Temp = Temp->pNext;
+		}
+		else
+		{
+			Temp = Tail;
+			for (int i = 0; i < size - Index - 1; i++)Temp = Temp->pPrev;
+		}
+		Element* erased = Temp->pPrev->pNext;
+		Temp->pNext->pPrev = Temp->pPrev;
+		Temp->pPrev->pNext = Temp->pNext;
+		delete erased;
+		size--;
+	}
 
 	//				Methods:
 	void print()const
 	{
-		cout << "Ãîëîâà ñïèñêà: " << Head << endl;
+		cout << "Ð“Ð¾Ð»Ð¾Ð²Ð° ÑÐ¿Ð¸ÑÐºÐ°: " << Head << endl;
 		for (Element* Temp = Head; Temp; Temp = Temp->pNext)
 			cout << Temp->pPrev << tab << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
-		cout << "Õâîñò ñïèñêà: " << Tail << endl;
-		cout << "Êîëè÷åñòâî ýëåìåíòîâ ñïèñêà: " << size << endl;
+		cout << "Ð¥Ð²Ð¾ÑÑ‚ ÑÐ¿Ð¸ÑÐºÐ°: " << Tail << endl;
+		cout << "ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² ÑÐ¿Ð¸ÑÐºÐ°: " << size << endl;
 	}
 	void reverse_print()const
 	{
-		cout << "Õâîñò ñïèñêà: " << Tail << endl;
+		cout << "Ð¥Ð²Ð¾ÑÑ‚ ÑÐ¿Ð¸ÑÐºÐ°: " << Tail << endl;
 		for (Element* Temp = Tail; Temp; Temp = Temp->pPrev)
 			cout << Temp->pPrev << tab << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
-		cout << "Ãîëîâà ñïèñêà: " << Head << endl;
-		cout << "Êîëè÷åñòâî ýëåìåíòîâ ñïèñêà: " << size << endl;
+		cout << "Ð“Ð¾Ð»Ð¾Ð²Ð° ÑÐ¿Ð¸ÑÐºÐ°: " << Head << endl;
+		cout << "ÐšÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² ÑÐ¿Ð¸ÑÐºÐ°: " << size << endl;
 	}
+	Element* begin()
+	{
+		Element* Temp = Head;
+		return Temp;
+	}
+	Element* end()
+	{
+		Element* Temp = Head;
+		while (Temp->pNext)Temp = Temp->pNext;
+		return Temp->pNext;
+	}
+	friend List operator+(const List& left, const List& right);
+	
 };
+List operator+(const List& left, const List& right)
+{
+	List cat = left;
+	for (Element* Temp = right.Head; Temp; Temp = Temp->pNext)
+		cat.push_back(Temp->Data);
+	return cat;
+}
 
 //#define BASE_CHECK
+//#define RANGE_BASE_FOR_ARRAY
+#define RANGE_FOR_LIST
+
 void main()
 {
 	setlocale(LC_ALL, "");
 #ifdef BASE_CHECK
 	int n;
-	cout << "Ââåäèòå ðàçìåð ñïèñêà: "; cin >> n;
+	cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ñ€Ð°Ð·Ð¼ÐµÑ€ ÑÐ¿Ð¸ÑÐºÐ°: "; cin >> n;
 	List list;
 	for (int i = 0; i < n; i++)
 	{
@@ -261,15 +385,34 @@ void main()
 	list.reverse_print();
 	int index;
 	int value;
-	cout << "Ââåäèòå èíäåêñ äîáàâëÿåìîãî ýëåìåíòà:"; cin >> index;
-	cout << "Ââåäèòå çíà÷åíèå äîáàâëÿåìîãî ýëåìåíòà:"; cin >> value;
+	cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð¸Ð½Ð´ÐµÐºÑ Ð´Ð¾Ð±Ð°Ð²Ð»ÑÐµÐ¼Ð¾Ð³Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð°:"; cin >> index;
+	cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð´Ð¾Ð±Ð°Ð²Ð»ÑÐµÐ¼Ð¾Ð³Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð°:"; cin >> value;
 	list.insert(index, value);
+	list.print();
+	list.reverse_print();
+	cout << "Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ Ð¸Ð½Ð´ÐµÐºÑ ÑƒÐ´Ð°Ð»ÑÐµÐ¼Ð¾Ð³Ð¾ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð°:"; cin >> index;
+	list.erase(index);
 	list.print();
 	list.reverse_print();
 #endif // BASE_CHECK
 
+#ifdef RANGE_BASE_FOR_ARRAY
 	List list = { 3,5,8,13,21 };
 	list.print();
 	list.reverse_print();
 
+	//List list2 = list;		//CopyConstructor
+	List list2;
+	list2 = list;			//CopyAssignment
+	list2.print();
+	list2.reverse_print();
+#endif // RANGE_BASE_FOR_ARRAY
+
+	List list = { 3, 5, 8, 13, 21 };
+	for (int i : list)
+	{
+		cout << i << tab;
+	}
+	cout << endl;
 }
+
