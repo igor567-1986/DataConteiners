@@ -109,9 +109,9 @@ using std::endl;
 #define tab "\t"
 #define delimiter "\n----------------------------------\n"
 
+
 class List
 {
-	
 	class Element
 	{
 		int Data;
