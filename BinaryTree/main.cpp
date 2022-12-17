@@ -117,7 +117,7 @@ private:
 			else insert(Data, Root->pRight);
 		}
 	}
-	void erase(int Data, Element* Root)
+	void erase(int Data, Element*& Root)
 	{
 		if (Root == nullptr)return;
 		erase(Data, Root->pLeft);
